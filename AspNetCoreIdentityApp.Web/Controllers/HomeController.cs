@@ -55,14 +55,20 @@ namespace AspNetCoreIdentityApp.Web.Controllers
                 ModelState.AddModelError(string.Empty, "Email veya þifre yanlýþ");
                 return View();
             }
-            var signInresult = await _signInManager.PasswordSignInAsync(hasUser, model.Password, model.RemembeMe, false);
+            var signInresult = await _signInManager.PasswordSignInAsync(hasUser, model.Password, model.RemembeMe, true);
 
             if (signInresult.Succeeded)
             {
                 return RedirectToAction(returnUrl);
             }
 
-            ModelState.AddModelErrorList(new List<string>() { "Email veya þifreniz yanlýþ" });
+            if (signInresult.IsLockedOut)
+            {
+                ModelState.AddModelErrorList(new List<string>() { "3 Dakika boyunca giriþ yapamazsýnýz." });
+                return View();
+            }
+            var accessFailedCount = _userManager.GetAccessFailedCountAsync(hasUser);
+            ModelState.AddModelErrorList(new List<string>() { $"Email veya þifreniz yanlýþ", $"Baþarýsýz giriþ sayýsý = {accessFailedCount}"  });
 
             return View();
         }
