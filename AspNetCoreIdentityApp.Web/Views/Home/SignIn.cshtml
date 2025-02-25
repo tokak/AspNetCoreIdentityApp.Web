@@ -1,0 +1,36 @@
+﻿@model SignInViewModel
+@{
+    ViewData["Title"] = "SignIn";
+}
+
+
+
+<div class="row">
+    <div class="col-md-6 offset-md-3">
+        <h2>Kullanıcı Giriş</h2>
+
+        <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert">
+        </div>
+        <form  asp-controller="Home" asp-action="SignIn" method="post">
+            <div class="mb-3">
+                <label asp-for="Email" class="form-label"></label>
+                <input type="email" asp-for="Email" class="form-control" aria-describedby="emailHelp">
+                <span class="text-danger" asp-validation-for="Email"></span>
+            </div>
+            <div class="mb-3">
+                <label asp-for="Password" class="form-label"></label>
+                <input type="password" class="form-control" asp-for="Password">
+                <span class="text-danger" asp-validation-for="Password"></span>
+            </div>
+            <div class="mb-3 form-check">
+                <input type="checkbox" asp-for="RemembeMe" class="form-check-input">
+                <label class="form-check-label" asp-for="RemembeMe">Check me out</label>
+                <span class="text-danger" asp-validation-for="RemembeMe"></span>
+            </div>
+            <button type="submit" class="btn btn-primary">Üye Giriş</button>
+        </form>
+    </div>
+</div>
+
+
+
