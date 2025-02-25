@@ -1,4 +1,6 @@
-﻿using AspNetCoreIdentityApp.Web.Models;
+﻿using AspNetCoreIdentityApp.Web.CustomValidations;
+using AspNetCoreIdentityApp.Web.Localizations;
+using AspNetCoreIdentityApp.Web.Models;
 using Microsoft.Extensions.Options;
 
 namespace AspNetCoreIdentityApp.Web.Extansions
@@ -15,9 +17,9 @@ namespace AspNetCoreIdentityApp.Web.Extansions
                 options.Password.RequiredLength = 6;
                 options.Password.RequireNonAlphanumeric = false;
                 options.Password.RequireLowercase = true;
-                options.Password.RequireUppercase = true;
+                options.Password.RequireUppercase = false;
                 options.Password.RequireDigit = false;
-            }).AddEntityFrameworkStores<AppDbContext>();
+            }).AddPasswordValidator<PasswordValidator>().AddUserValidator<UserValidator>().AddErrorDescriber<LocalizationIdentityErrorDescriber>().AddEntityFrameworkStores<AppDbContext>();
         }
     }
 }
