@@ -8,6 +8,12 @@
         <form asp-controller="Home" asp-action="SignUp" method="post">
             <h2>Kullancı Kayıt</h2>
 
+            @if (TempData["SuccessMessage"]!=null)
+            {
+                <div class="alert alert-info" role="alert">
+                    TempData["SuccessMessage"]
+                </div>
+            }
 
             <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert">
                  
