@@ -2,7 +2,7 @@
 
 namespace AspNetCoreIdentityApp.Web.ViewModels
 {
-    public class ResetPassordViewModel
+    public class ForgetPassordViewModel
     {
         [EmailAddress(ErrorMessage = "Email formatı yanlış")]
         [Required(ErrorMessage = "Email alanı boş bırakılamaz")]

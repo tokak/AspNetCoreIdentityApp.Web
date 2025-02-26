@@ -68,7 +68,7 @@ namespace AspNetCoreIdentityApp.Web.Controllers
                 return View();
             }
             var accessFailedCount = _userManager.GetAccessFailedCountAsync(hasUser);
-            ModelState.AddModelErrorList(new List<string>() { $"Email veya þifreniz yanlýþ", $"Baþarýsýz giriþ sayýsý = {accessFailedCount}"  });
+            ModelState.AddModelErrorList(new List<string>() { $"Email veya þifreniz yanlýþ", $"Baþarýsýz giriþ sayýsý = {accessFailedCount}" });
 
             return View();
         }
@@ -103,9 +103,29 @@ namespace AspNetCoreIdentityApp.Web.Controllers
         }
 
 
-        public IActionResult ResetPassword()
+        public IActionResult ForgetPassword()
         {
             return View();
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> ForgetPassword(ForgetPassordViewModel request)
+        {
+            var hasUser = await _userManager.FindByEmailAsync(request.Email);
+
+            if (hasUser == null)
+            {
+                ModelState.AddModelError(string.Empty, "Bu email adresine sahip kullanýcý bulunamadý.");
+                return View();
+            }
+
+            string passwordResetToken = await _userManager.GeneratePasswordResetTokenAsync(hasUser);
+
+            var passwordResetLink = Url.Action("ResetPassword", "Home", new { userId = hasUser.Id, Token = passwordResetToken });
+
+            TempData["SuccessMessage"] = "Þifre yenileme linki e-posta adresinize gönderilmiþtir.";
+
+            return RedirectToAction(nameof(ForgetPassword));
         }
 
 
