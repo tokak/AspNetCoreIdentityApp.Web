@@ -103,6 +103,11 @@ namespace AspNetCoreIdentityApp.Web.Controllers
         }
 
 
+        public IActionResult ResetPassword()
+        {
+            return View();
+        }
+
 
     }
 }

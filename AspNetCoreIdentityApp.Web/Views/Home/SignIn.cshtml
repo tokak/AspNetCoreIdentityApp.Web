@@ -23,15 +23,28 @@
                 <input type="password" class="form-control" asp-for="Password">
                 <span class="text-danger" asp-validation-for="Password"></span>
             </div>
-            <div class="mb-3 form-check">
-                <input type="checkbox" asp-for="RemembeMe" class="form-check-input">
-                <label class="form-check-label" asp-for="RemembeMe"></label>
-                <span class="text-danger" asp-validation-for="RemembeMe"></span>
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="mb-3 form-check">
+                        <input type="checkbox" asp-for="RemembeMe" class="form-check-input">
+                        <label class="form-check-label" asp-for="RemembeMe"></label>
+                        <span class="text-danger" asp-validation-for="RemembeMe"></span>
+                    </div>
+                </div>
+                <div class="col-md-6 ">
+                    <a asp-controller="Home" asp-action="ResetPassword" class="btn btn-outline-secondary btn-sm float-end">Şifremi Unuttum</a>
+                </div>
             </div>
+          
             <button type="submit" class="btn btn-primary">Üye Giriş</button>
+        
         </form>
     </div>
 </div>
 
 
 
+@section Scripts
+{
+    @await Html.PartialAsync("_ValidationScriptsPartial");
+}
