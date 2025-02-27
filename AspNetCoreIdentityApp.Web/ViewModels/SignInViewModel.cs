@@ -20,6 +20,7 @@ public class SignInViewModel
     
     [Required(ErrorMessage = "Şifre alanı boş bırakılamaz")]
     [Display(Name = "Şifre :")]
+    [MinLength(6, ErrorMessage = "Şifreniz en az 6 kareker olabilir.")]
     public string Password { get; set; }
     [Display(Name = "Beni Hatırla ")]
     public bool RemembeMe { get; set; }
