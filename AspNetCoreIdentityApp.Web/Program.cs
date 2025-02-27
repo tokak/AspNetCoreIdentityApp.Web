@@ -5,6 +5,7 @@ using AspNetCoreIdentityApp.Web.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.FileProviders;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -21,6 +22,12 @@ builder.Services.Configure<SecurityStampValidatorOptions>(options =>
 {
     options.ValidationInterval = TimeSpan.FromMinutes(30);
 });
+
+// Uygulama hizmetlerine (Dependency Injection container'a) bir dosya saðlayýcýsý (IFileProvider) ekler.  
+// PhysicalFileProvider, belirtilen dizindeki (bu durumda, uygulamanýn çalýþtýðý dizin) fiziksel dosya sistemine eriþim saðlar.  
+// Bu sayede uygulama, çalýþma dizinindeki dosya ve dizinleri yönetebilir.
+builder.Services.AddSingleton<IFileProvider>(new PhysicalFileProvider(Directory.GetCurrentDirectory()));
+
 
 builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("EmailSettings"));
 builder.Services.AddIdentityWithExtensions();

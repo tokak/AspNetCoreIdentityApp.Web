@@ -16,6 +16,6 @@ namespace AspNetCoreIdentityApp.Web.ViewModels
         [Compare(nameof(PasswordNew), ErrorMessage = "Şifreler uyuşmuyor tekrar deneyiniz.")]
         [Display(Name = "Yeni Şifre Tekrar :")]
         [MinLength(6, ErrorMessage = "Şifreniz en az 6 kareker olabilir.")]
-        public string PasswordConfirm { get; set; }
+        public string PasswordNewConfirm { get; set; }
     }
 }
