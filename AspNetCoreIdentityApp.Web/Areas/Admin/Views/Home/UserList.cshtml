@@ -6,12 +6,20 @@
 
 <h1>Üye Listesi</h1>
 
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-info" role="alert">
+        @TempData["SuccessMessage"]
+    </div>
+}
 <table class="table table-striped">
     <thead>
         <tr>
             <th>Id</th>
             <th>Kullanıcı Adı</th>
             <th>Email</th>
+            <th>Rol İşlemleri</th>
         </tr>
     </thead>
     <tbody>
@@ -21,6 +29,9 @@
                 <td>@item.Id</td>
                 <td>@item.Name</td>
                 <td>@item.Email</td>
+                <td>
+                    <a asp-area="Admin" asp-controller="Roles" asp-action="AssignRoleToUser" asp-route-id="@item.Id" class="btn btn-outline-info">Rol Ata</a>
+                </td>
             </tr>
 
         }

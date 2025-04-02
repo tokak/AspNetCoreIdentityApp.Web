@@ -1,12 +1,14 @@
 ﻿using AspNetCoreIdentityApp.Web.Areas.Admin.Models;
 using AspNetCoreIdentityApp.Web.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 namespace AspNetCoreIdentityApp.Web.Areas.Admin.Controllers
 {
-    [Area("Admin")]
+    [Authorize(Roles ="Admin")]
+    [Area("Admin")]    
     public class HomeController : Controller
     {
         private readonly UserManager<AppUser> _userManager;

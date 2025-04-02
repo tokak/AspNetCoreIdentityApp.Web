@@ -15,7 +15,7 @@
         @if (TempData["SuccessMessage"] != null)
         {
             <div class="alert alert-info" role="alert">
-                TempData["SuccessMessage"]
+                @TempData["SuccessMessage"]
             </div>
         }
 
@@ -72,7 +72,7 @@
                     <select class="form-control" asp-for="Gender" asp-items="ViewBag.genderList">
                         <option value="">Cinsiyet Seçiniz</option>
                     </select>
-                    <input asp-for="Gender" class="form-control">
+                    @* <input asp-for="Gender" class="form-control"> *@
                     <span asp-validation-for="Gender " class="text-danger"></span>
                 </div>
             </div>
