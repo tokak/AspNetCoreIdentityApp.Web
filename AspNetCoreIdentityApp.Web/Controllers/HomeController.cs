@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using System.Diagnostics;
+using System.Security.Claims;
 
 namespace AspNetCoreIdentityApp.Web.Controllers
 {
@@ -51,7 +52,7 @@ namespace AspNetCoreIdentityApp.Web.Controllers
         }
         [HttpPost]
         public async Task<IActionResult> SignIn(SignInViewModel model, string returnUrl = null)
-            {
+        {
 
             if (!ModelState.IsValid)
             {
@@ -63,10 +64,14 @@ namespace AspNetCoreIdentityApp.Web.Controllers
                 ModelState.AddModelError(string.Empty, "Email veya þifre yanlýþ");
                 return View();
             }
-            var signInresult = await _signInManager.PasswordSignInAsync(hasUser, model.Password, model.RemembeMe, true);
 
+            var signInresult = await _signInManager.PasswordSignInAsync(hasUser, model.Password, model.RemembeMe, true);
             if (signInresult.Succeeded)
             {
+                if (hasUser.BirthDate.HasValue)
+                {
+                    await _signInManager.SignInWithClaimsAsync(hasUser, model.RemembeMe, new[] {new Claim("birthdate",hasUser.BirthDate.Value.ToString())});
+                }
                 if (returnUrl == null)
                     return RedirectToAction("Index");
 
@@ -98,19 +103,29 @@ namespace AspNetCoreIdentityApp.Web.Controllers
                 PhoneNumber = request.Phone,
             };
             var identityResult = await _userManager.CreateAsync(appUser, request.PasswordConfirm);
-
-            if (identityResult.Succeeded)
+            if (!identityResult.Succeeded)
             {
-                ViewBag.Message = "Üyelik kayýt iþlemi baþarýyla gerçekleþmiþtir.";
+                ModelState.AddModelErrorList(identityResult.Errors.Select(x => x.Description).ToList());
+                //foreach (IdentityError item in identityResult.Errors)
+                //{
+                //    ModelState.AddModelError(string.Empty, item.Description);
+                //}
                 return View();
             }
-
-            ModelState.AddModelErrorList(identityResult.Errors.Select(x => x.Description).ToList());
-            //foreach (IdentityError item in identityResult.Errors)
-            //{
-            //    ModelState.AddModelError(string.Empty, item.Description);
-            //}
-            return View();
+            var user = await _userManager.FindByEmailAsync(request.Email);
+            var exchangeClaim = new Claim("ExchangeExpireDate", DateTime.Now.AddDays(10).ToString());
+            var claimResult = await _userManager.AddClaimAsync(user, exchangeClaim);
+            if (!claimResult.Succeeded)
+            {
+                ModelState.AddModelErrorList(claimResult.Errors.Select(x => x.Description).ToList());
+                //foreach (IdentityError item in identityResult.Errors)
+                //{
+                //    ModelState.AddModelError(string.Empty, item.Description);
+                //}
+                return View();
+            }
+            TempData["SuccessMessage"] = "Üyelik kayýt iþlemi baþarýyla gerçekleþmiþtir.";
+            return RedirectToAction(nameof(HomeController.SignUp));
         }
 
 

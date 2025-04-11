@@ -6,6 +6,8 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.Extensions.FileProviders;
+using System.Collections.Generic;
+using System.Security.Claims;
 
 namespace AspNetCoreIdentityApp.Web.Controllers
 {
@@ -146,7 +148,15 @@ namespace AspNetCoreIdentityApp.Web.Controllers
 
             // Kullanıcıyı yeniden oturum açmaya zorla.
             await _signInManager.SignOutAsync();
+            if (request.BirthDate.HasValue)
+            {
+                await _signInManager.SignInWithClaimsAsync(currentUser, true, new[] { new Claim("birthdate", currentUser.BirthDate.Value.ToString()) });
+            }
+            else
+            {
             await _signInManager.SignInAsync(currentUser, true);
+            }
+
 
             // Başarı mesajını kullanıcıya ilet.
             TempData["SuccessMessage"] = "Üye bilgileri başarıyla değiştirilmiştir.";
@@ -169,6 +179,40 @@ namespace AspNetCoreIdentityApp.Web.Controllers
             string message = string.Empty;
 
            ViewBag.message = "Bu sayfayı görmeye yetkiniz yoktur. Yetki almak için yöneticiniz ile görüşünüz.";
+            return View();
+        }
+
+        [HttpGet]
+        public IActionResult Claims()
+        {
+            var userClaimList = User.Claims.Select(x=> new ClaimsViewModel()
+            {
+                Issuser = x.Issuer,
+                Type = x.Type,
+                Value = x.Value
+                
+            }).ToList();
+            return View(userClaimList);
+        }
+
+        [Authorize(Policy = "AnkaraPolicy")]
+        [HttpGet]
+        public IActionResult AnkaraPage() 
+        {
+            return View(); 
+        }
+
+        [Authorize(Policy = "ExchangePolicy")]
+        [HttpGet]
+        public IActionResult ExchangePage()
+        {
+            return View();
+        }
+
+        [Authorize(Policy = "ViolencePolicy")]
+        [HttpGet]
+        public IActionResult ViolencePage()
+        {
             return View();
         }
 

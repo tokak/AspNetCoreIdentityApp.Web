@@ -1,13 +1,19 @@
+using AspNetCoreIdentityApp.Web.ClaimProvider;
 using AspNetCoreIdentityApp.Web.Extansions;
 using AspNetCoreIdentityApp.Web.Models;
 using AspNetCoreIdentityApp.Web.OptionsModels;
+using AspNetCoreIdentityApp.Web.PermissionsRoot;
+using AspNetCoreIdentityApp.Web.Requirements;
+using AspNetCoreIdentityApp.Web.Seeds;
 using AspNetCoreIdentityApp.Web.Services;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.FileProviders;
 
 var builder = WebApplication.CreateBuilder(args);
+
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
@@ -32,6 +38,29 @@ builder.Services.AddSingleton<IFileProvider>(new PhysicalFileProvider(Directory.
 builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("EmailSettings"));
 builder.Services.AddIdentityWithExtensions();
 builder.Services.AddScoped<IEmailService, EmailService>();
+builder.Services.AddScoped<IClaimsTransformation,UserClaimProvider>();
+builder.Services.AddScoped<IAuthorizationHandler, ExchangeExpireRequirementHandler>();
+builder.Services.AddScoped<IAuthorizationHandler, ViolenceRequirementHandler>();
+
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("AnkaraPolicy", policy =>
+    {
+        policy.RequireClaim("city", "ankara"); 
+    });
+    options.AddPolicy("ExchangePolicy", policy =>
+    {
+        policy.AddRequirements(new ExchangeExpireRequirement());
+    });
+    options.AddPolicy("ViolencePolicy", policy =>
+    {
+        policy.AddRequirements(new ViolenceRequirement() { ThresholAge=18});
+    });
+    options.AddPolicy("OrderPermissionReadAndDelete", policy =>
+    {
+        policy.RequireClaim("permission", Permissions.Order.Read, Permissions.Order.Delete, Permissions.Stock.Delete);
+    });
+});
 
 builder.Services.ConfigureApplicationCookie(opt =>
 {
@@ -45,9 +74,13 @@ builder.Services.ConfigureApplicationCookie(opt =>
     opt.SlidingExpiration = true;
 });
 
-
-
 var app = builder.Build();
+
+using(var scope = app.Services.CreateScope())
+{
+    var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<AppRole>>();
+    await PermissionSeed.Seed(roleManager);
+}
 
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())

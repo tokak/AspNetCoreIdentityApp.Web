@@ -1,0 +1,30 @@
+﻿@model List<ClaimsViewModel>
+@{
+    ViewData["Title"] = "Claims";
+    Layout = "~/Areas/Admin/Views/Shared/_Layout.cshtml";
+}
+
+
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Issuser</th>
+            <th>Type</th>
+            <th>Value</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>@item.Issuser</td>             
+                <td>@item.Type</td>             
+                <td>@item.Value</td>             
+            </tr>
+
+        }
+
+    </tbody>
+
+
+</table>
