@@ -4,15 +4,14 @@
 }
 
 
-
 <div class="row">
     <div class="col-md-6 offset-md-3">
         <h2>Kullanıcı Giriş</h2>
 
         <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert">
         </div>
-        @* <form  asp-controller="Home" asp-action="SignIn" asp-route-returnUrl="@Context.Request.Query["returnUrl"]" method="post"> url gönderme aşagıdaki ile aynı görevi görür*@
-            <form method="post">
+
+        <form method="post">
             <div class="mb-3">
                 <label asp-for="Email" class="form-label"></label>
                 <input type="email" asp-for="Email" class="form-control" aria-describedby="emailHelp">
@@ -31,13 +30,24 @@
                         <span class="text-danger" asp-validation-for="RemembeMe"></span>
                     </div>
                 </div>
-                <div class="col-md-6 ">
+                <div class="col-md-6">
                     <a asp-controller="Home" asp-action="ForgetPassword" class="btn btn-outline-secondary btn-sm float-end">Şifremi Unuttum</a>
                 </div>
             </div>
-          
-            <button type="submit" class="btn btn-primary">Üye Giriş</button>
-        
+
+            <button type="submit" class="btn btn-primary w-100 mb-3">Üye Giriş</button>
+
+            <div class="text-center mb-2">veya</div>
+
+            <a asp-action="FacebookLogin" class="btn btn-outline-primary w-100 mb-2">
+                <i class="fab fa-facebook-f me-2"></i> Facebook ile Giriş Yap
+            </a>
+            <a asp-action="GoogleLogin" class="btn btn-outline-danger w-100 mb-2">
+                <i class="bi bi-google"></i> Google ile Giriş Yap
+            </a>
+            <a href="/signin-microsoft" class="btn btn-outline-secondary w-100">
+                <i class="bi bi-microsoft"></i> Microsoft ile Giriş Yap
+            </a>
         </form>
     </div>
 </div>

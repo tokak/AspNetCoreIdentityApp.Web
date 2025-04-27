@@ -69,7 +69,7 @@ namespace AspNetCoreIdentityApp.Web.Controllers
             {
                 if (hasUser.BirthDate.HasValue)
                 {
-                    await _signInManager.SignInWithClaimsAsync(hasUser, model.RemembeMe, new[] {new Claim("birthdate",hasUser.BirthDate.Value.ToString())});
+                    await _signInManager.SignInWithClaimsAsync(hasUser, model.RemembeMe, new[] { new Claim("birthdate", hasUser.BirthDate.Value.ToString()) });
                 }
                 if (returnUrl == null)
                     return RedirectToAction("Index");
@@ -196,6 +196,104 @@ namespace AspNetCoreIdentityApp.Web.Controllers
 
         }
 
+        // Kullanýcýyý Facebook ile kimlik doðrulama için yönlendirir.
+        public IActionResult FacebookLogin(string ReturnUrl)
+        {
+            string RedirectUrl = Url.Action("ExternalResponse", "Home", new { ReturnUrl = ReturnUrl });
+            var property = _signInManager.ConfigureExternalAuthenticationProperties("Facebook", RedirectUrl);
+            return new ChallengeResult("Facebook", property);
+        }
+
+
+        public IActionResult GoogleLogin(string ReturnUrl)
+        {
+            string RedirectUrl = Url.Action("ExternalResponse", "Home", new { ReturnUrl = ReturnUrl });
+            var property = _signInManager.ConfigureExternalAuthenticationProperties("Google", RedirectUrl);
+            return new ChallengeResult("Google", property);
+        }
+
+
+
+        // Facebook kimlik doðrulama iþleminden dönen kullanýcý bilgilerini iþler.
+        // Kullanýcý daha önce giriþ yaptýysa giriþ yapar, ilk defa giriþ yapýyorsa kullanýcý oluþturur ve baðlar.
+        public async Task<IActionResult> ExternalResponse(string ReturnUrl = "/")
+        {
+            ExternalLoginInfo info = await _signInManager.GetExternalLoginInfoAsync();
+            if (info == null)
+            {
+                return RedirectToAction("LogIn");
+            }
+            var result = await _signInManager.ExternalLoginSignInAsync(info.LoginProvider, info.ProviderKey, true);
+
+            if (result.Succeeded)
+            {
+                return Redirect(ReturnUrl);
+            }
+            else
+            {
+                AppUser user = new AppUser();
+                user.Email = info.Principal.FindFirst(ClaimTypes.Email).Value;
+                string ExternalUserId = info.Principal.FindFirst(ClaimTypes.NameIdentifier).Value;
+
+                if (info.Principal.HasClaim(x => x.Type == ClaimTypes.Name))
+                {
+                    string userName = info.Principal.FindFirst(ClaimTypes.Name).Value;
+                    userName = userName.Replace(" ", "-").ToLower() + ExternalUserId.Substring(0, 5).ToString();
+                    user.UserName = userName;
+                }
+                else
+                {
+                    user.UserName = info.Principal.FindFirst(ClaimTypes.Email).Value;
+                }
+
+                IdentityResult createResult = await _userManager.CreateAsync(user);
+                if (createResult.Succeeded)
+                {
+                    IdentityResult loginResult = await _userManager.AddLoginAsync(user, info);
+                    if (loginResult.Succeeded)
+                    {
+                        //await _signInManager.SignInAsync(user, true);
+                        await _signInManager.ExternalLoginSignInAsync(info.LoginProvider, info.ProviderKey, true);
+                        return Redirect(ReturnUrl);
+                    }
+                    else
+                    {
+                        foreach (var error in loginResult.Errors)
+                        {
+                            ModelState.AddModelError(string.Empty, error.Description);
+                        }
+
+                        var errors = ModelState.Values
+                                                .SelectMany(v => v.Errors)
+                                                .Select(e => e.ErrorMessage)
+                                                .ToList();
+
+                        return View("ErrorPage", errors); // List<string> olarak ErrorPage'e gönderiyoruz
+                    }
+                }
+                else
+                {
+                    foreach (var error in createResult.Errors)
+                    {
+                        ModelState.AddModelError(string.Empty, error.Description);
+                    }
+
+                    var errors = ModelState.Values
+                                            .SelectMany(v => v.Errors)
+                                            .Select(e => e.ErrorMessage)
+                                            .ToList();
+
+                    return View("ErrorPage", errors); // List<string> olarak ErrorPage'e gönderiyoruz
+                }
+            }
+        }
+
+
+
+        public IActionResult ErrorPage()
+        {
+            return View();
+        }
 
     }
 }
