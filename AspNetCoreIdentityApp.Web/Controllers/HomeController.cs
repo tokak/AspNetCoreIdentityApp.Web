@@ -6,6 +6,8 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using System.Diagnostics;
 using System.Security.Claims;
+using AspNetCoreIdentityApp.Core.Enums;
+using AspNetCoreIdentityApp.Core.Models;
 
 namespace AspNetCoreIdentityApp.Web.Controllers
 {
@@ -52,41 +54,70 @@ namespace AspNetCoreIdentityApp.Web.Controllers
         [HttpPost]
         public async Task<IActionResult> SignIn(SignInViewModel model, string returnUrl = null)
         {
-
             if (!ModelState.IsValid)
             {
-                return View();
+                return View(model);
             }
-            var hasUser = await _userManager.FindByEmailAsync(model.Email);
-            if (hasUser == null)
+
+            var user = await _userManager.FindByEmailAsync(model.Email);
+            if (user == null)
             {
                 ModelState.AddModelError(string.Empty, "Email veya þifre yanlýþ");
-                return View();
+                return View(model);
             }
 
-            var signInresult = await _signInManager.PasswordSignInAsync(hasUser, model.Password, model.RemembeMe, true);
-            if (signInresult.Succeeded)
+            // Þifre kontrolü doðru yapýlýyor mu?
+            var isPasswordCorrect = await _userManager.CheckPasswordAsync(user, model.Password);
+            if (!isPasswordCorrect)
             {
-                if (hasUser.BirthDate.HasValue)
+                var failedCount = await _userManager.GetAccessFailedCountAsync(user);
+                ModelState.AddModelErrorList(new List<string>
+                 {
+                        "Email veya þifreniz yanlýþ",
+                         $"Baþarýsýz giriþ sayýsý = {failedCount}"
+                 });
+                return View(model);
+            }
+
+            await _userManager.ResetAccessFailedCountAsync(user);
+            await _signInManager.SignOutAsync();
+
+            var result = await _signInManager.PasswordSignInAsync(user, model.Password, model.RemembeMe, true);
+
+            if (result.Succeeded)
+            {
+                // Ek claim ekleniyor mu?
+                if (user.BirthDate.HasValue)
                 {
-                    await _signInManager.SignInWithClaimsAsync(hasUser, model.RemembeMe, new[] { new Claim("birthdate", hasUser.BirthDate.Value.ToString()) });
+                    var claims = new[] { new Claim("birthdate", user.BirthDate.Value.ToString("yyyy-MM-dd")) };
+                    await _signInManager.SignInWithClaimsAsync(user, model.RemembeMe, claims);
                 }
-                if (returnUrl == null)
-                    return RedirectToAction("Index");
 
-                return RedirectToAction(returnUrl);
+                return !string.IsNullOrEmpty(returnUrl) ? Redirect(returnUrl) : RedirectToAction("Index");
             }
 
-            if (signInresult.IsLockedOut)
+            if (result.RequiresTwoFactor)
             {
-                ModelState.AddModelErrorList(new List<string>() { "3 Dakika boyunca giriþ yapamazsýnýz." });
-                return View();
+                return RedirectToAction("TwoFactorLogIn");
             }
-            var accessFailedCount = await _userManager.GetAccessFailedCountAsync(hasUser);
-            ModelState.AddModelErrorList(new List<string>() { $"Email veya þifreniz yanlýþ", $"Baþarýsýz giriþ sayýsý = {accessFailedCount}" });
 
-            return View();
+            if (result.IsLockedOut)
+            {
+                ModelState.AddModelErrorList(new List<string> { "3 Dakika boyunca giriþ yapamazsýnýz." });
+            }
+            else
+            {
+                var failedCount = await _userManager.GetAccessFailedCountAsync(user);
+                ModelState.AddModelErrorList(new List<string>
+        {
+            "Email veya þifreniz yanlýþ",
+            $"Baþarýsýz giriþ sayýsý = {failedCount}"
+        });
+            }
+
+            return View(model);
         }
+
 
         [HttpPost]
         public async Task<IActionResult> SignUp(SignUpViewModel request)
@@ -100,6 +131,7 @@ namespace AspNetCoreIdentityApp.Web.Controllers
                 Email = request.Email,
                 UserName = request.UserName,
                 PhoneNumber = request.Phone,
+                TwoFactor = (int)TwoFactor.None
             };
             var identityResult = await _userManager.CreateAsync(appUser, request.PasswordConfirm);
             if (!identityResult.Succeeded)
@@ -293,6 +325,71 @@ namespace AspNetCoreIdentityApp.Web.Controllers
         public IActionResult ErrorPage()
         {
             return View();
+        }
+
+
+        public async Task<IActionResult> TwoFactorLogin(string ReturnUrl = "/")
+        {
+            var user = await _signInManager.GetTwoFactorAuthenticationUserAsync();
+            TempData["ReturnUrl"] = ReturnUrl;
+
+            switch ((TwoFactor)user.TwoFactor)
+            {
+                case TwoFactor.None:
+                    break;
+                case TwoFactor.Phone:
+                    break;
+                case TwoFactor.Email:
+                    break;
+                case TwoFactor.MicrosoftGoogle:
+
+                    break;
+            }
+
+            return View(new TwoFactorLoginViewModel()
+            {
+                TwoFactorType = (TwoFactor)user.TwoFactor,
+                isRecoverCode = false,
+                isRememberMe = false,
+                VerificationCode = string.Empty,
+            });
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> TwoFactorLogin(TwoFactorLoginViewModel twoFactorLoginView)
+        {
+            var user = await _signInManager.GetTwoFactorAuthenticationUserAsync();
+            ModelState.Clear();
+            bool isSuccessAuth = false;
+
+            if ((TwoFactor)user.TwoFactor == TwoFactor.MicrosoftGoogle)
+            {
+                Microsoft.AspNetCore.Identity.SignInResult result;
+                if (twoFactorLoginView.isRecoverCode)
+                {
+                    result = await _signInManager.TwoFactorRecoveryCodeSignInAsync(twoFactorLoginView.VerificationCode);
+                }
+                else
+                {
+                    result = await _signInManager.TwoFactorAuthenticatorSignInAsync(twoFactorLoginView.VerificationCode, twoFactorLoginView.isRememberMe, false);
+                }
+                if (result.Succeeded)
+                {
+                    isSuccessAuth = true;
+                }
+                else
+                {
+                    ModelState.AddModelError("", "Doðrulama kodu yanlýþ");
+                }
+            }
+
+            if (isSuccessAuth)
+            {
+                return Redirect(TempData["ReturnUrl"].ToString());
+            }
+
+            twoFactorLoginView.TwoFactorType = (TwoFactor)user.TwoFactor;
+            return View(twoFactorLoginView);
         }
 
     }

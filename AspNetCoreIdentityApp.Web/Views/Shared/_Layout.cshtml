@@ -35,6 +35,9 @@
                         </li>
                         <li class="nav-item">
                             <a class="nav-link text-dark" asp-area="" asp-controller="Order" asp-action="Index">Order(Permission)  Sayfa</a>
+                        </li
+                        <li class="nav-item">
+                            <a class="nav-link text-dark" asp-area="" asp-controller="Member" asp-action="TwoFactorAuth">İki adımlı sayfa doğrulaması</a>
                         </li>
                     </ul>
 
@@ -60,6 +63,9 @@
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
-    @await RenderSectionAsync("Scripts", required: false)
+    <script src="~/qrcode/qrcode.js"></script>
+      
+    @await RenderSectionAsync("Scripts", required: false) 
+    @* ihtiyac varsa kullanılır *@
 </body>
 </html>

@@ -1,0 +1,63 @@
+﻿@using AspNetCoreIdentityApp.Core.Enums
+@using AspNetCoreIdentityApp.Core.Models
+@model TwoFactorLoginViewModel
+@{
+    ViewData["Title"] = "TwoFactorLogin";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<div class="row justify-content-center">
+    <div class="col-md-6 col-lg-5">
+        <div class="card shadow rounded-4 border-0 mt-5">
+            <div class="card-body p-4">
+                <h4 class="text-center mb-3 text-primary">🔒 İki Adımlı Kimlik Doğrulama</h4>
+                <hr />
+
+                <form method="post">
+                    <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+                    <div class="mb-3">
+                        <label asp-for="VerificationCode" class="form-label"></label>
+                        <input asp-for="VerificationCode" class="form-control form-control-lg" placeholder="Kodunuzu giriniz" />
+                        <span asp-validation-for="VerificationCode" class="text-danger small"></span>
+                    </div>
+
+                    <div class="form-check mb-2">
+                        <input type="checkbox" asp-for="isRememberMe" class="form-check-input" />
+                        <label class="form-check-label" asp-for="isRememberMe">Beni Hatırla</label>
+                    </div>
+
+                    @if (Model.TwoFactorType == TwoFactor.MicrosoftGoogle)
+                    {
+                        <div class="form-check mb-3">
+                            <input type="checkbox" asp-for="isRecoverCode" class="form-check-input" />
+                            <label class="form-check-label" asp-for="isRecoverCode">
+                                Kurtarma kodu girmek için kutucuğu işaretleyiniz.
+                            </label>
+                        </div>
+                    }
+
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-success btn-lg">Gönder</button>
+                    </div>
+                </form>
+
+                <div class="alert alert-info mt-4">
+                    @switch (Model.TwoFactorType)
+                    {
+                        case TwoFactor.Phone:
+                            <span><strong>SMS:</strong> Telefonunuza gelen kodu giriniz.</span>
+                            break;
+                        case TwoFactor.Email:
+                            <span><strong>Email:</strong> Email adresinize gelen kodu giriniz.</span>
+                            break;
+                        case TwoFactor.MicrosoftGoogle:
+                            <span><strong>Authenticator:</strong> Microsoft/Google Authenticator uygulamanızdaki kodu giriniz.</span>
+                            break;
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+

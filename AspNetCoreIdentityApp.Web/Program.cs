@@ -11,6 +11,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileProviders;
+using AspNetCoreIdentityApp.Service.TwoFactorService;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -47,6 +48,8 @@ builder.Services.AddScoped<IAuthorizationHandler, ExchangeExpireRequirementHandl
 builder.Services.AddScoped<IAuthorizationHandler, ViolenceRequirementHandler>();
 builder.Services.AddScoped<IMemberService, MemberService>();
 
+builder.Services.AddScoped<TwoFactorService, TwoFactorService>();
+
 builder.Services.AddAuthorization(options =>
 {
     options.AddPolicy("AnkaraPolicy", policy =>
@@ -69,14 +72,14 @@ builder.Services.AddAuthorization(options =>
 
 builder.Services.AddAuthentication()
     .AddFacebook(opt =>
-{
-    opt.AppId = "4127482727482284";
-    opt.AppSecret = "298e136b1d1426e879c15ff083e36807";
-}).AddGoogle(opt =>
-{
-    opt.ClientId = "98686100221-61ebe5b0e00592kdrdlfjtvadridr86v.apps.googleusercontent.com";
-    opt.ClientSecret = "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";
-});
+    {
+        opt.AppId = "4127482727482284";
+        opt.AppSecret = "298e136b1d1426e879c15ff083e36807";
+    }).AddGoogle(opt =>
+    {
+        opt.ClientId = "98686100221-61ebe5b0e00592kdrdlfjtvadridr86v.apps.googleusercontent.com";
+        opt.ClientSecret = "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";
+    });
 
 builder.Services.ConfigureApplicationCookie(opt =>
 {

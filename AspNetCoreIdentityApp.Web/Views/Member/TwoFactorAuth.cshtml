@@ -1,0 +1,64 @@
+﻿@using AspNetCoreIdentityApp.Core.Enums
+@model AuthenticationViewModel
+@{
+    ViewData["Title"] = "TwoFactorAuth";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<h2>İki adımlı kimlik doğrulama</h2>
+<div class="row">
+    <div class="col-md-12">
+        <form asp-action="TwoFactorAuth" method="post">
+            <div class="form-group">
+                <label asp-for="TwoFactorType" class="control-label"></label>
+                <select class="form-control" asp-for="TwoFactorType" asp-items="Html.GetEnumSelectList<TwoFactor>()"></select>
+            </div>
+            <div class="form-group mt-2">
+                <input type="submit" value="Güncelle" class="btn btn-success" />
+            </div>
+        </form>
+    </div>
+    @if (ViewBag.warning != null)
+    {
+        <div class="col-md-12">
+            <div class="alert alert-warning">
+                @ViewBag.warning
+            </div>
+        </div>
+    }
+    @if (TempData["message"] != null)
+    {
+        <div class="col-md-12">
+            <div class="alert alert-info">
+                @TempData["message"]
+            </div>
+        </div>
+    }
+    @if (TempData["recoveryCodes"] != null)
+    {
+        var recoveryCodes = TempData["recoveryCodes"] as string[];
+
+        <div class="col-md-12">
+            <div class="alert alert-info">
+                <p>
+                    <strong>Lütfen bu kurtarma kodlarını güvenli bir yerde saklayınız.</strong><br />
+                    Microsoft/Google Authenticator uygulamasını kullanamadığınız durumlarda bu kodları kullanabilirsiniz.
+                </p>
+            </div>
+
+            @if (recoveryCodes != null && recoveryCodes.Length > 0)
+            {
+                <div class="alert alert-secondary">
+                    
+                        @foreach (var code in recoveryCodes)
+                        {
+                            <strong>@code</strong>
+                        }
+                </div>
+            }
+        </div>
+    }
+
+</div>
+
+
