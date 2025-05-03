@@ -11,6 +11,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileProviders;
+using AspNetCoreIdentityApp.Service.TwoFactorService;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -33,12 +34,15 @@ builder.Services.Configure<SecurityStampValidatorOptions>(options =>
     options.ValidationInterval = TimeSpan.FromMinutes(30);
 });
 
+
+
+builder.Services.Configure<TwoFactorOptions>(builder.Configuration.GetSection("TwoFactorOptions"));
+
+
 // Uygulama hizmetlerine (Dependency Injection container'a) bir dosya saðlayýcýsý (IFileProvider) ekler.  
 // PhysicalFileProvider, belirtilen dizindeki (bu durumda, uygulamanýn çalýþtýðý dizin) fiziksel dosya sistemine eriþim saðlar.  
 // Bu sayede uygulama, çalýþma dizinindeki dosya ve dizinleri yönetebilir.
 builder.Services.AddSingleton<IFileProvider>(new PhysicalFileProvider(Directory.GetCurrentDirectory()));
-
-
 builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("EmailSettings"));
 builder.Services.AddIdentityWithExtensions();
 builder.Services.AddScoped<IEmailService, EmailService>();
@@ -46,6 +50,15 @@ builder.Services.AddScoped<IClaimsTransformation,UserClaimProvider>();
 builder.Services.AddScoped<IAuthorizationHandler, ExchangeExpireRequirementHandler>();
 builder.Services.AddScoped<IAuthorizationHandler, ViolenceRequirementHandler>();
 builder.Services.AddScoped<IMemberService, MemberService>();
+builder.Services.AddScoped<EmailSender>();
+
+builder.Services.AddScoped<TwoFactorService, TwoFactorService>();
+
+builder.Services.AddSession(options =>
+{
+    options.IdleTimeout = TimeSpan.FromMinutes(30);
+    options.Cookie.Name = "MainSession";
+});
 
 builder.Services.AddAuthorization(options =>
 {
@@ -69,14 +82,14 @@ builder.Services.AddAuthorization(options =>
 
 builder.Services.AddAuthentication()
     .AddFacebook(opt =>
-{
-    opt.AppId = "4127482727482284";
-    opt.AppSecret = "298e136b1d1426e879c15ff083e36807";
-}).AddGoogle(opt =>
-{
-    opt.ClientId = "98686100221-61ebe5b0e00592kdrdlfjtvadridr86v.apps.googleusercontent.com";
-    opt.ClientSecret = "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";
-});
+    {
+        opt.AppId = "appId giriniz";
+        opt.AppSecret = "appSecret giriniz";
+    }).AddGoogle(opt =>
+    {
+        opt.ClientId = "clientId giriniz";
+        opt.ClientSecret = "ClientSecret giriniz";
+    });
 
 builder.Services.ConfigureApplicationCookie(opt =>
 {
@@ -109,6 +122,7 @@ if (!app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 app.UseStaticFiles();
 
+app.UseSession();
 app.UseRouting();
 app.UseAuthentication();    
 app.UseAuthorization();

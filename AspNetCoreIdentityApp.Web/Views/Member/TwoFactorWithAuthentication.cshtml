@@ -1,0 +1,48 @@
+﻿@model AuthenticationViewModel
+@{
+    ViewData["Title"] = "TwoFactorWithAuthentication";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<h2>İki adımlı kimlik doğrulama</h2>
+<div class="row">
+    <div class="col-md-12">
+        <div class="alert alert-info">
+            1.adım aşağıdaki barkodu telefonunuzdaki Google/Microsoft Authenticatior uygulamasına taratınız. Veya aşağıdaki kodu telefonunuza giriniz.
+        </div>
+    </div>
+    <strong class="text-danger">Key:</strong> <strong class="text-primary">@Model.Sharedkey</strong>
+    <hr />
+     
+    <div id="qrcode"></div>
+
+    <div class="alert alert-info mt-3">
+        2.adım Telefonunuzdaki kodu aşağıdaki alana giriniz.
+    </div>
+    <form asp-action="TwoFactorWithAuthentication" method="post">
+        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+        <div class="form-group">
+            <label asp-for="VerificationCode"></label>
+            <input asp-for="VerificationCode" class="form-control" />
+            <span asp-validation-for="VerificationCode" class="text-danger"></span>
+
+            <input  type="hidden" asp-for="AuthenticationUri"/>
+            <input  type="hidden" asp-for="Sharedkey"/>
+        </div>
+        <div class="form-group">
+            <input type="submit" value="Aktif Et" class="btn btn-success"/>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <script type="text/javascript">
+        var uri = "@Model.AuthenticationUri";
+        new QRCode(document.getElementById("qrcode"), {
+            text: uri,
+            width: 150,
+            height: 150,
+            correctLevel: QRCode.CorrectLevel.H
+        });
+    </script>
+}
