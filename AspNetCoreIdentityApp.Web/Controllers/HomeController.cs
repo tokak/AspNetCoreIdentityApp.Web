@@ -8,6 +8,7 @@ using System.Diagnostics;
 using System.Security.Claims;
 using AspNetCoreIdentityApp.Core.Enums;
 using AspNetCoreIdentityApp.Core.Models;
+using AspNetCoreIdentityApp.Service.TwoFactorService;
 
 namespace AspNetCoreIdentityApp.Web.Controllers
 {
@@ -17,13 +18,16 @@ namespace AspNetCoreIdentityApp.Web.Controllers
         private readonly UserManager<AppUser> _userManager;
         private readonly SignInManager<AppUser> _signInManager;
         private readonly IEmailService _emailService;
-
-        public HomeController(ILogger<HomeController> logger, UserManager<AppUser> userManager, SignInManager<AppUser> signInManager, IEmailService emailService)
+        private readonly TwoFactorService _twoFactorService;
+        private readonly EmailSender _emailSender;
+        public HomeController(ILogger<HomeController> logger, UserManager<AppUser> userManager, SignInManager<AppUser> signInManager, IEmailService emailService, TwoFactorService twoFactorService, EmailSender emailSender)
         {
             _logger = logger;
             _userManager = userManager;
             _signInManager = signInManager;
             _emailService = emailService;
+            _twoFactorService = twoFactorService;
+            _emailSender = emailSender;
         }
 
         public IActionResult Index()
@@ -98,7 +102,11 @@ namespace AspNetCoreIdentityApp.Web.Controllers
 
             if (result.RequiresTwoFactor)
             {
-                return RedirectToAction("TwoFactorLogIn");
+                if (user.TwoFactor ==(int)TwoFactor.Email || user.TwoFactor == (int)TwoFactor.Phone)
+                {
+                    HttpContext.Session.Remove("currentTime");
+                }
+                return RedirectToAction("TwoFactorLogIn","Home", new {ReturnUrl = TempData["Return"] });
             }
 
             if (result.IsLockedOut)
@@ -340,6 +348,12 @@ namespace AspNetCoreIdentityApp.Web.Controllers
                 case TwoFactor.Phone:
                     break;
                 case TwoFactor.Email:
+                    if (_twoFactorService.TimeLeft(HttpContext) == 0)
+                    {
+                        return RedirectToAction("Login");
+                    }
+                    ViewBag.timeLeft = _twoFactorService.TimeLeft(HttpContext);
+                    HttpContext.Session.SetString("codeverification", _emailSender.Send(user.Email));
                     break;
                 case TwoFactor.MicrosoftGoogle:
 
@@ -383,6 +397,23 @@ namespace AspNetCoreIdentityApp.Web.Controllers
                 }
             }
 
+            else if (user.TwoFactor == (sbyte)TwoFactor.Email || user.TwoFactor == (sbyte)TwoFactor.Phone)
+            {
+                ViewBag.timeLeft = _twoFactorService.TimeLeft(HttpContext);
+                if (twoFactorLoginView.VerificationCode == HttpContext.Session.GetString("codeVerification"))
+                {
+                    await _signInManager.SignOutAsync();
+                    await _signInManager.SignInAsync(user, twoFactorLoginView.isRememberMe);
+                    HttpContext.Session.Remove("currentTime");
+                    HttpContext.Session.Remove("codeVerification");
+                    isSuccessAuth = true;
+                }
+                else
+                {
+                    ModelState.AddModelError("","Doðrulama kodu yanlýþ");
+                }
+            }
+
             if (isSuccessAuth)
             {
                 return Redirect(TempData["ReturnUrl"].ToString());
@@ -390,6 +421,21 @@ namespace AspNetCoreIdentityApp.Web.Controllers
 
             twoFactorLoginView.TwoFactorType = (TwoFactor)user.TwoFactor;
             return View(twoFactorLoginView);
+        }
+
+        [HttpGet]
+        public JsonResult AgainSendEmail()
+        {
+            try
+            {
+                var user = _signInManager.GetTwoFactorAuthenticationUserAsync().Result;
+                HttpContext.Session.SetString("codeVerification",_emailSender.Send(user.Email));
+                return Json(true);
+            }
+            catch (Exception ex)
+            {
+                return Json(false);
+            }
         }
 
     }

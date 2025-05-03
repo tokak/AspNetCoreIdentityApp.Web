@@ -159,8 +159,8 @@ namespace AspNetCoreIdentityApp.Web.Controllers
                     TempData["message"] = "iki adımlı doğrulama tipiniz sms olarak belirlenmiştir.";
                     break;
                 case TwoFactor.Email:
-                    currentUser.TwoFactorEnabled = false;
-                    currentUser.TwoFactor = (sbyte)TwoFactor.Email;
+                    currentUser.TwoFactorEnabled = true;
+                    currentUser.TwoFactor = (sbyte)(TwoFactor.Email);
                     TempData["message"] = "iki adımlı doğrulama tipiniz email olarak belirlenmiştir.";
                     break;
                 case TwoFactor.MicrosoftGoogle:
